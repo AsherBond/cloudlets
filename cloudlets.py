@@ -65,7 +65,6 @@ class Manifest(dict):
         }
     )
     
-
     def get_args_schema(self):
         """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
         return DictSchema(self.get("args", {}))
@@ -122,6 +121,19 @@ class Image(object):
             img.mkfs(size)
             with vm2vm.raw.Mountpoint(img.name) as mnt:
                 self.copy(dest=mnt, config=config, **filters)
+
+    def ec2(self, out, name, config, size, ec2_user, ec2_cert_path, ec2_pk_path, kernel, ramdisk, register=False, access_key=None, secret_key=None, bucket_name=None, region=None, **filters):
+        image = mktemp()
+        self.raw(image, config, size, **filters)
+        try:
+            bundle = vm2vm.ec2.create_bundle(image_path=image, arch=self.manifest["arch"], name=name, ec2_user=ec2_user, ec2_cert_path=ec2_cert_path, ec2_pk_path=ec2_pk_path, kernel=kernel, ramdisk=ramdisk)
+            os.rename(bundle, out)
+            if register:
+                vm2vm.ec2.upload_bundle(out, access_key, secret_key, region, bucket_name)
+                vm2vm.ec2.register_bundle(path=out, name=name, private_key=ec2_pk_path, cert=ec2_cert_path, region=region, bucket_name=bucket_name)
+        finally:
+            if os.path.exists(image):
+                os.unlink(image)
 
     def copy(self, dest=None, *args, **kw):
         """ Copy the image to a new directory at <dest>. If dest is None, a temporary directory is created. <dest> is returned. All options are passed to Image.tar() for lossless transfer. """

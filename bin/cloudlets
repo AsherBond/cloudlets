@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 
 import argparse
@@ -35,6 +36,34 @@ def cmd_raw(args):
     filters = dict((key, key in args.only) for key in ["templates", "volatile", "persistent", "other"])
     config = json.loads(args.config)
     cloudlets.Image(args.image, args.manifest).raw(args.out, config, args.size, **filters)
+
+parser_ec2 = subcommands.add_parser("ec2", help="Create an ec2 image of the cloudlet")
+parser_ec2.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_ec2.add_argument("out", metavar="EC2_BUNDLE_PATH", help="path for the new bundle")
+parser_ec2.add_argument("--name", metavar="EC2_IMAGE_NAME", help="Name of the generated ec2 image", required=True)
+parser_ec2.add_argument("--config", metavar="JSON_CONFIG", help="Configure the output, leaving the source untouched", default='{}')
+parser_ec2.add_argument("--size", metavar="EC2_IMAGE_SIZE", type=int, help="Size of the generated ec2 image", default=1024*1024*1024)
+parser_ec2.add_argument("--user", metavar="EC2_USER", help="ec2 username", default=os.environ.get('EC2_USER'))
+parser_ec2.add_argument("--cert", metavar="EC2_CERT_PATH", help="path for the ec2 certificate", default=os.environ.get('EC2_CERT'))
+parser_ec2.add_argument("--pk", metavar="EC2_PK_PATH", help="path for the ec2 private key", default=os.environ.get('EC2_PRIVATE_KEY'))
+parser_ec2.add_argument("--kernel", metavar="EC2_AKI", help="ec2 kernel image (aki)", default='aki-b02a01c4')
+parser_ec2.add_argument("--ramdisk", metavar="EC2_ARI", help="ec2 ramdisk image (ari)", default='ari-bc2a01c8')
+parser_ec2.add_argument("--register", help="register image into ec2", action='store_true')
+parser_ec2.add_argument("--access-key", metavar="S3_ACCESS_KEY", help="Access key for s3")
+parser_ec2.add_argument("--secret-key", metavar="S3_SECRET_KEY", help="Secret key for s3")
+parser_ec2.add_argument("--bucket", metavar="S3_BUCKET", help="s3 bucket name")
+parser_ec2.add_argument("--region", metavar="EC2_REGION", help="ec2 region", default="us-east-1")
+parser_ec2.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
+def cmd_ec2(args):
+    if os.path.exists(args.out):
+        print >>sys.stderr, "File already exists: {0}".format(args.out)
+        sys.exit(1)
+    if args.register and not (getattr(args, 'access_key') and getattr(args, 'secret_key') and getattr(args, 'bucket')):
+        print >>sys.stderr, "Access key, Secret key and bucket name are mandatory for register."
+        sys.exit(1)
+    filters = dict((key, key in args.only) for key in ["templates", "volatile", "persistent", "other"])
+    config = json.loads(args.config)
+    cloudlets.Image(args.image, args.manifest).ec2(args.out, args.name, config, args.size, args.user, args.cert, args.pk, args.kernel, args.ramdisk, args.register, args.access_key, args.secret_key, args.bucket, args.region, **filters)
 
 parser_config = subcommands.add_parser("config", help="Configure an image in-place. If no configuration is given, show current configuration")
 parser_config.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
@@ -84,7 +113,6 @@ parser_schema = subcommands.add_parser("schema", help="Display an image's config
 parser_schema.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 def cmd_schema(args):
     print json.dumps(cloudlets.Image(args.image, args.manifest).manifest.config_schema, indent=1)
-
 
 parser_find = subcommands.add_parser("find", help="List the contents of an image, with optional filtering")
 parser_find.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
