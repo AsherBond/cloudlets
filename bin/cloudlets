@@ -134,5 +134,12 @@ parser_overlay.add_argument("overlay", metavar="OVERLAY_PATH", help="path to the
 def cmd_overlay(args):
     cloudlets.Image(args.image, args.manifest).overlay(args.overlay)
 
+parser_chroot = subcommands.add_parser("chroot", help="Chroot inside the cloudlet image")
+parser_chroot.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_chroot.add_argument("chroot_command", nargs="*", help="chroot command")
+def cmd_chroot(args):
+    cloudlets.Image(args.image, args.manifest).chroot(*args.chroot_command)
+
 if __name__ == "__main__":
     main()
+

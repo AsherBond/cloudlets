@@ -309,4 +309,8 @@ post-update.metashelf = python:metashelf.hg.hook_restore
         file(hgrc_path, "w").write(hgrc)
         mercurial.dispatch.dispatch(list(("-R", self.path) + cmd))
 
+    def chroot(self, *cmd):
+        subprocess.call(["chroot", self.path] + list(cmd))
+
     config = property(get_config, set_config)
+
