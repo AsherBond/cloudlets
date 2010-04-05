@@ -6,6 +6,7 @@ import shutil
 import tarfile
 import subprocess
 from tempfile import mkdtemp, mktemp
+from distutils.dir_util import copy_tree
 
 import js
 import metashelf
@@ -55,6 +56,17 @@ def filter_path(path, include, exclude):
 class Manifest(dict):
     """A dictionary holding an image's metadata"""
 
+    kernel = {
+            "optional"      : True,
+            "type"          : "object",
+            "description"   : "Kernel version information",
+            "properties"    : {
+                "os"        : {"optional" : True, "type": "string", "description": "Operating system"},
+                "version"   : {"optional" : True, "type": "string", "description": "Version"},
+                "flavor"    : {"optional" : True, "type": "string", "description": "Flavor"},
+                },
+    }
+
     specs = DictSchema(
         {
             "name"          : {"optional": True,  "type": "string", "description": "User defined name"},
@@ -63,7 +75,24 @@ class Manifest(dict):
             "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
             "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
             "persistent"    : {"optional": True,  "type": "array", "description": "List of files or directories holding persistent data", "default": []},
-            "volatile"      : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored"}
+            "volatile"      : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored", "default": []},
+            "entry_points"  : {
+                "optional"      : True,
+                "default"       : {},
+                "type"          : "object",
+                "description"   : "List of entry points available for this image",
+                "properties"    : {
+                    "kernel"    : kernel,
+                    "init"      : {
+                        "optional"      : True,
+                        "type"          : "object",
+                        "description"   : "Kernel requirements",
+                        "properties"    : {
+                            "kernel" : kernel
+                        }
+                    },
+                }
+            }
         }
     )
     
@@ -245,6 +274,17 @@ class Image(object):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
         file(self.config_file, "w").write(json.dumps(config, indent=1))
+
+    def overlay(self, overlay):
+        manifest = self.manifest
+        copy_tree(overlay, self.path)
+        overlay_manifest = Image(overlay).manifest
+        overlay_entry_points = overlay_manifest['entry_points']
+        manifest['persistent'] = list(set(manifest['persistent'] + overlay_manifest['persistent']))
+        manifest['volatile'] = list(set(manifest['volatile'] + overlay_manifest['volatile']))
+        for entry_point in overlay_entry_points.keys():
+            manifest['entry_points'][entry_point] = overlay_entry_points[entry_point]
+        file(self.manifestfile, 'w').write(json.dumps(manifest, indent=4))
 
     def hg(self, *cmd):
         """ Run a mercurial command, using the image as a repository """

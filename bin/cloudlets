@@ -128,5 +128,11 @@ parser_hg.add_argument("hg_command", nargs="+", help="mercurial command")
 def cmd_hg(args):
     cloudlets.Image(args.image, args.manifest).hg(*args.hg_command)
 
+parser_overlay = subcommands.add_parser("overlay", help="Overlay a cloudlet on another")
+parser_overlay.add_argument("image", metavar="IMAGE_PATH", help="path to the cloudlet image")
+parser_overlay.add_argument("overlay", metavar="OVERLAY_PATH", help="path to the cloudlet overlay image")
+def cmd_overlay(args):
+    cloudlets.Image(args.image, args.manifest).overlay(args.overlay)
+
 if __name__ == "__main__":
     main()
