@@ -1,0 +1,150 @@
+Cloudlets format specification
+------------------------------
+
+This is work in progress. We welcome any help to the documentation effort!
+
+Version: 0.0.4 
+Maintainer: Solomon Hykes <solomon.hykes@dotcloud.com>
+
+
+Table of contents
+-----------------
+
+  * Summary
+  * Principles
+  * The manifest
+  * Templates
+  * Persistent data
+  * Volatile data
+  * Entry points
+  * Versioning
+  * Footnotes
+
+
+SUMMARY
+-------
+
+Cloudlets is a format for universal server images.
+
+It can be used to package any bootable system into a single, portable object.
+Cloudlet images support:
+
+  * True distributed revision control (track your images with Mercurial or Git)
+  * File templating
+  * Output to any VM format: Xen, VMWare, KVM, EC2...
+  * Bootstrap physical machines
+  * Create bootable disks
+  * Configurable output
+
+PRINCIPLES
+----------
+
+1. Files, not blocks
+
+    We work at the filesystem level. Take a tarball, make it smarter: you get a
+    cloudlets image.
+
+
+2. Snapshots, not builds
+
+    It doesn't matter how you build your image. We only snapshot the result.
+
+3. Not too smart
+
+    The less metadata, the better. If it's not strictly required to make an image
+    portable and reusable, it doesn't belong in the cloudlets spec.
+
+
+THE MANIFEST
+------------
+
+The manifest contains metadata about an image. It's encoded in JSON.
+The command "cloudlets specs" will output the manifest format, in
+json-schema [2].
+
+A manifest is only useful used in combination with a bootable filesystem. The
+manifest itself does not explicitely reference a filesystem. There are 2 ways
+to keep track of the relationships:
+
+  1. Off-band. Store manifests and filesystems separately, maintain the links
+     yourself.
+
+  2. Embedded manifests. Store manifests at a hardcoded location inside the
+     filesystem.
+
+As a convenience, the following path is reserved for the purposes of cloudlets
+metadata:
+
+    /.cloudlet/             A directory reserved for the cloudlets format
+    /.cloudlet/manifest     A text file containing the manifest, in JSON
+
+This path should be used as the default location when searching for an image's
+manifest.
+
+
+TEMPLATES
+---------
+
+The manifest may designate a list of files in the image as being templates.
+Templates may embed dynamic content using the EmbeddedJS format [1].
+
+Templates are rendered when the image is configured. Upon rendering the
+Javascript code may access the following variables:
+
+  * (FIXME) The user configuration
+  * (FIXME) The configuration environment
+  * (FIXME) The contents of the manifest
+
+
+PERSISTENT DATA
+---------------
+
+The manifest may designate a list of files or directories as containing
+persistent data.
+
+Typical persistent data paths:
+
+  * /var/lib
+  * /var/log
+  * /home
+
+
+VOLATILE DATA
+-------------
+
+The manifest may designate a list of files or directories as containing
+volatile data.
+
+Typical volatile data paths:
+
+  * /tmp
+  * /var/run
+
+
+ENTRY POINTS
+------------
+
+Entry point describe how an image can receive control of the execution flow.
+One image can offer several entry points. There are 3 types of entry points:
+
+  * kernel (receives control from a bootloader)
+  * init (receives control from a kernel)
+  * chroot (receives control from a shell)
+
+Each entry point can specify requirements. For example:
+
+  * A kernel may only boot on an x86 architecture
+  * An init may require a linux kernel version 2.6.32 or above
+  * A chroot may require a certain command to be executed upon entry to function properly
+
+
+VERSIONING
+----------
+
+Images can be kept under revision control.
+
+
+FOOTNOTES
+---------
+
+[1] http://embeddedjs.com
