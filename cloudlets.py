@@ -64,7 +64,7 @@ class Manifest(dict):
                 "os"        : {"optional" : True, "type": "string", "description": "Operating system"},
                 "version"   : {"optional" : True, "type": "string", "description": "Version"},
                 "flavor"    : {"optional" : True, "type": "string", "description": "Flavor"},
-                },
+            },
     }
 
     specs = DictSchema(
@@ -91,6 +91,16 @@ class Manifest(dict):
                             "kernel" : kernel
                         }
                     },
+                    "chroot"    : {
+                        "optional"      : True,
+                        "type"          : "object",
+                        "description"   : "Chroot command and enter & exit hooks",
+                        "properties"    : {
+                            "command" : {"optional": True, "type": "string", "description": "Command to execute on chroot"},
+                            "enter" : {"optional": True, "type": "string", "description": "Hook to execute when entering"},
+                            "exit" : {"optional": True, "type": "string", "description": "Hook to execute when exiting"}
+                        }
+                    }
                 }
             }
         }
@@ -310,7 +320,17 @@ post-update.metashelf = python:metashelf.hg.hook_restore
         mercurial.dispatch.dispatch(list(("-R", self.path) + cmd))
 
     def chroot(self, *cmd):
-        subprocess.call(["chroot", self.path] + list(cmd))
+        cmd = list(cmd)
+        chroot = self.manifest['entry_points'].get('chroot', {})
+        if not cmd:
+            cmd = chroot.get('command', '').split()
+        enter = chroot.get('enter', '').split()
+        if enter:
+            subprocess.call(["chroot", self.path] + enter)
+        subprocess.call(["chroot", self.path] + cmd)
+        exit = chroot.get('exit', '').split()
+        if exit:
+            subprocess.call(["chroot", self.path] + exit)
 
     config = property(get_config, set_config)
 
