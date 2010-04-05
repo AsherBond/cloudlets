@@ -57,6 +57,8 @@ class Manifest(dict):
 
     specs = DictSchema(
         {
+            "name"          : {"optional": True,  "type": "string", "description": "User defined name"},
+            "description"   : {"optional": True,  "type": "string", "description": "User defined description"},
             "arch"          : {"optional": True,  "type": "string", "description": "Hardware architecture. example: i386"},
             "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
             "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
