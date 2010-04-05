@@ -21,12 +21,7 @@ Table of contents
   * Footnotes
 
 
-
-
-
-
-
-Summary (FIXME)
+SUMMARY
 -------
 
 Cloudlets is a format for universal server images.
@@ -41,27 +36,26 @@ Cloudlet images support:
   * Create bootable disks
   * Configurable output
 
-Principles (FIXME)
+PRINCIPLES
 ----------
 
 1. Files, not blocks
 
-We work at the filesystem level. Take a tarball, make it smarter: you get a
-cloudlets image.
+    We work at the filesystem level. Take a tarball, make it smarter: you get a
+    cloudlets image.
 
 
 2. Snapshots, not builds
 
-It doesn't matter how you build your image. We only snapshot the result.
-
+    It doesn't matter how you build your image. We only snapshot the result.
 
 3. Not too smart
 
-The less metadata, the better. If it's not strictly required to make an image
-portable and reusable, it doesn't belong in the cloudlets spec.
+    The less metadata, the better. If it's not strictly required to make an image
+    portable and reusable, it doesn't belong in the cloudlets spec.
 
 
-The manifest (FIXME)
+THE MANIFEST
 ------------
 
 The manifest contains metadata about an image. It's encoded in JSON.
@@ -88,7 +82,7 @@ This path should be used as the default location when searching for an image's
 manifest.
 
 
-Templates (FIXME)
+TEMPLATES
 ---------
 
 The manifest may designate a list of files in the image as being templates.
@@ -102,7 +96,7 @@ Javascript code may access the following variables:
   * (FIXME) The contents of the manifest
 
 
-Persistent data (FIXME)
+PERSISTENT DATA
 ---------------
 
 The manifest may designate a list of files or directories as containing
@@ -115,7 +109,7 @@ Typical persistent data paths:
   * /home
 
 
-Volatile data (FIXME)
+VOLATILE DATA
 -------------
 
 The manifest may designate a list of files or directories as containing
@@ -127,7 +121,7 @@ Typical volatile data paths:
   * /var/run
 
 
-Entry points (FIXME)
+ENTRY POINTS
 ------------
 
 Entry point describe how an image can receive control of the execution flow.
@@ -144,12 +138,13 @@ Each entry point can specify requirements. For example:
   * A chroot may require a certain command to be executed upon entry to function properly
 
 
-Versioning (FIXME)
+VERSIONING
 ----------
 
 Images can be kept under revision control.
 
-Footnotes
---------
+
+FOOTNOTES
+---------
 
 [1] http://embeddedjs.com
