@@ -319,6 +319,9 @@ post-update.metashelf = python:metashelf.hg.hook_restore
         file(hgrc_path, "w").write(hgrc)
         mercurial.dispatch.dispatch(list(("-R", self.path) + cmd))
 
+    def hg_capture(self, *cmd):
+        return subprocess.Popen('true', preexec_fn = lambda: self.hg(*cmd), stdout = subprocess.PIPE).stdout.read()
+
     def chroot(self, *cmd):
         cmd = list(cmd)
         chroot = self.manifest['entry_points'].get('chroot', {})
